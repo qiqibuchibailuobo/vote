@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>注册</title>
+    <!-- cdn引入ElementUI样式 -->
+    <link rel="stylesheet" href="/css/elementUI.css">
+    <!--cdn引入ElementUI组件必须先引入Vue-->
+    <script src="/js/vue.js"></script>
+    <!-- cdn引入ElementUI组件库 -->
+    <script src="/js/elementUI.js"></script>
+    <script src="/js/axios.js"></script>
+    <script src="https://cdn.bootcdn.net/ajax/libs/vue-resource/1.5.2/vue-resource.js"></script>
+    <script src="https://cdn.bootcdn.net/ajax/libs/jquery/3.6.0/jquery.js"></script>
+</head>
+<style lang="scss" scoped>
+    .login-box {
+        border: 1px solid #DCDFE6;
+        width: 350px;
+        margin: 180px auto;
+        padding: 35px 35px 15px 35px;
+        border-radius: 5px;
+        -webkit-border-radius: 5px;
+        -moz-border-radius: 5px;
+        box-shadow: 0 0 25px #909399;
+    }
+
+    .login-title {
+        text-align: center;
+        margin: 0 auto 40px auto;
+        color: #303133;
+    }
+</style>
+
+<body>
+<div id="app">
+    <div class="con">
+
+        <div class="user">
+
+            <div class="reg">
+                <el-form :model="ruleForm" status-icon :rules="rules" ref="ruleForm" label-width="100px"
+                         class="demo-ruleForm login-box">
+                    <header class="login-title">
+                        <p>用户注册</p>
+                    </header>
+                    <el-form :model="dynamicValidateForm" ref="user" label-width="100px" class="demo-dynamic">
+                        <el-form-item
+                                class="pass"
+                                prop="username"
+                                label="用户名"
+                                :rules="[
+                    { required: true, message: '请输入用户名', trigger: 'blur' },
+                    ]"
+                        >
+                            <el-input v-model="dynamicValidateForm.username"></el-input>
+                        </el-form-item>
+                    </el-form>
+                    <el-form-item label="密码" prop="password" class="pass">
+                        <el-input type="password" v-model="ruleForm.password" autocomplete="off"></el-input>
+                    </el-form-item>
+                    <el-form-item label="确认密码" prop="checkPass" class="pass">
+                        <el-input type="password" v-model="ruleForm.checkPass" autocomplete="off"></el-input>
+                    </el-form-item>
+                    <el-form :model="dynamicValidateForm" ref="dynamicValidateForm" label-width="100px"
+                             class="demo-dynamic">
+                        <el-form-item
+                                class="pass"
+                                prop="email"
+                                label="邮箱"
+                                :rules="[
+                    { required: true, message: '请输入邮箱地址', trigger: 'blur' },
+                    { type: 'email', message: '请输入正确的邮箱地址', trigger: ['blur', 'change'] }
+                    ]"
+                        >
+                            <el-input v-model="dynamicValidateForm.email"></el-input>
+                        </el-form-item>
+                    </el-form>
+                    <el-form-item>
+                        <el-button type="primary" @click="submitForm('ruleForm','user')">提 交</el-button>
+                        <el-button @click="resetForm('ruleForm','dynamicValidateForm','user')" class="reset">重 置
+                        </el-button>
+                        <el-button type="primary" @click="loginForm()">登 录</el-button>
+
+                    </el-form-item>
+                </el-form>
+            </div>
+        </div>
+    </div>
+
+
+</div>
+
+
+<script type="text/javascript">
+    const vm = new Vue({ // 配置对象 options
+        // 配置选项(option)
+        el: '#app',  // element: 指定用vue来管理页面中的哪个标签区域
+
+        data() {
+            var validatePass = (rule, value, callback) => {
+                if (value === '') {
+                    callback(new Error('请输入密码'));
+                } else {
+                    if (this.ruleForm.checkPass !== '') {
+                        this.$refs.ruleForm.validateField('checkPass');
+                    }
+                    callback();
+                }
+            };
+            var validatePass2 = (rule, value, callback) => {
+                if (value === '') {
+                    callback(new Error('请再次输入密码'));
+                } else if (value !== this.ruleForm.password) {
+                    callback(new Error('两次输入密码不一致!'));
+                } else {
+                    callback();
+                }
+            };
+            return {
+                ruleForm: {
+                    password: '',
+                    checkPass: '',
+                    age: '',
+                    value: ''
+                },
+                rules: {
+                    password: [
+                        {validator: validatePass, trigger: 'blur'},
+                        {required: true, message: '密码不可为空', trigger: 'blur'}
+                    ],
+                    checkPass: [
+                        {validator: validatePass2, trigger: 'blur'}
+                    ],
+                    username: [
+                        {required: true, message: '账号不可为空', trigger: 'blur'}
+                    ]
+                },
+                dynamicValidateForm: {
+                    username: '',
+                    email: ''
+                }
+            };
+        },
+
+        components: {},
+
+        computed: {},
+
+        mounted() {
+        },
+
+        methods: {
+            submitForm(formName, dynamicValidateForm, user) {
+                console.log(this.dynamicValidateForm.username);
+                console.log(this.ruleForm.password);
+                console.log(this.ruleForm.checkPass);
+                console.log(this.dynamicValidateForm.email);
+                let registerUser = {
+                    "username": this.dynamicValidateForm.username,
+                    "password": this.ruleForm.password,
+                    "email": this.dynamicValidateForm.email
+                };
+                this.$refs[formName].validate((valid) => {
+                    if (valid) {
+                        // alert('submit!');
+                        this.$http.post('/user/registerIn', registerUser)
+                            .then((r) => {
+                                console.log(r.data);
+                                if (r.data.isok == true) {
+                                    this.$message({
+                                        showClose: true,
+                                        message: '注册成功！',
+                                        type: 'success'
+                                    });
+                                    this.timer = setTimeout(() => {   //设置延迟执行
+                                        location.href = "/rest/";
+                                    }, 2000);
+                                } else {
+                                    this.$message({
+                                        showClose: true,
+                                        message: r.data.message,
+                                        type: 'error'
+                                    });
+                                    this.timer = setTimeout(() => {   //设置延迟执行
+                                        //location.href = "/rest/";
+                                        this.resetForm(formName);
+                                    }, 2000);
+                                }
+                            }).catch((r) => {
+                            this.$message({
+                                showClose: true,
+                                message: r.data.message,
+                                type: 'error'
+                            });
+                            this.timer = setTimeout(() => {   //设置延迟执行
+                                location.href = "/rest/register";
+                                this.resetForm(formName);
+                            }, 2000);
+
+                        })
+
+                    } else {
+                        // console.log('error submit!!');
+                        return false;
+                    }
+                });
+            },
+            resetForm(formName, dynamicValidateForm, user) {
+                this.$refs[formName].resetFields();
+                this.$refs.dynamicValidateForm.resetFields();
+                this.$refs.user.resetFields();
+            },
+            loginForm() {
+                location.href = "/rest/";
+            }
+        },
+    })
+</script>
+
+
+</body>
+
+</html>
