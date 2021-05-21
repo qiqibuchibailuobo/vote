@@ -49,7 +49,7 @@
         /*background-color: #EBEEF5;*/
         color: #333;
         text-align: center;
-        line-height: 160px;
+        /*line-height: 160px;*/
         height: 770px;
     }
 
@@ -121,15 +121,18 @@
     .el-picker-panel__footer .el-button--text.el-picker-panel__link-btn {
         display: none;
     }
+
+
 </style>
 <body>
 <div id="app">
     <el-container>
         <el-header>
             <span class="headerFont headerIcon" @click="returnIndex()">投票系统</span> &nbsp;&nbsp;
+            <span class="headerFont" @click="goAdminUserControl()">用户管理</span> &nbsp;&nbsp;
             <span class="headerFont" @click="createVoteFormVisible = true">创建投票</span> &nbsp;&nbsp;
-            <span class="headerFont">我创建的投票</span> &nbsp;&nbsp;
-            <span class="headerFont">欢迎</span> &nbsp;&nbsp;
+            <span class="headerFont" @click="goManagement()">我创建的投票</span> &nbsp;&nbsp;
+            <span class="headerFont">欢迎管理员</span> &nbsp;&nbsp;
             <el-dropdown @command="handleCommand">
             <span class="el-dropdown-link">
                     {{Name}}
@@ -137,7 +140,7 @@
             </span>
                 <el-dropdown-menu slot="dropdown">
                     <el-dropdown-item command="z" v-model="userType" v-if="userType == 0">
-                        <el-button type="text" @click="goAdmin">管理员界面</el-button>
+                        <el-button type="text" @click="goAdmin()">管理员界面</el-button>
                     </el-dropdown-item>
                     <el-dropdown-item command="a">
                         <el-button type="text" @click="dialogFormVisibleName = true">修改名称</el-button>
@@ -150,48 +153,63 @@
             </el-dropdown>
         </el-header>
         <el-main>
+
             <el-col :span="7" class="main-card">
                 <el-card shadow="hover" class="main-card">
+                    <div style="margin-bottom: 10px">
+
+
+                        <el-popconfirm
+                                title="确定删除吗？"
+                                @confirm="deleteVote()"
+                        >
+                            <el-button type="danger" slot="reference" plain>删除用户</el-button>
+                        </el-popconfirm>
+
+                        <el-button type="success" @click="addUserDialogFormVisible = true" plain>添加用户</el-button>
+                        <el-input
+                                style="width: 200px"
+                                placeholder="请输入内容"
+                                prefix-icon="el-icon-search"
+                                v-model="searchVote">
+                        </el-input>
+
+                        <el-button icon="el-icon-search" type="primary" @click="searchVotes()" plain>搜索</el-button>
+                        <el-button type="primary" @click="clearSearchVotes()" plain>清空搜索</el-button>
+
+                    </div>
+
 
                     <el-table
-                            :data="votes"
+                            tooltip-effect="dark"
+                            ref="voteMultipleTable"
+                            :data="users"
                             border
+                            @selection-change="voteHandleSelectionChange"
+
                     >
                         <el-table-column
+                                type="selection"
+                                width="50">
+                        </el-table-column>
+                        <el-table-column
                                 fixed
-                                prop="name"
-                                label="名称"
+                                prop="username"
+                                label="用户名"
                                 width="150"
                         >
                         </el-table-column>
                         <el-table-column
-                                prop="createDate"
-                                label="开始时间"
+                                prop="name"
+                                label="名称"
                                 width="170">
                         </el-table-column>
                         <el-table-column
-                                prop="endDate"
-                                label="结束时间"
-                                width="170">
+                                prop="email"
+                                label="邮箱"
+                                width="480">
                         </el-table-column>
-                        <el-table-column
-                                prop="describe"
-                                label="描述"
-                                width="120">
-                        </el-table-column>
-                        <el-table-column
-                                prop="maxChoice"
-                                label="最多投几票"
-                                width="120">
-                        </el-table-column>
-                        <el-table-column
-                                label="审核"
-                                width="120">
-                            <template slot-scope="scope">
-                                <span v-if="scope.row.state=='1'">通过</span>
-                                <span v-else style="color: #F56C6C">未通过</span>
-                            </template>
-                        </el-table-column>
+
                         <el-table-column
                                 fixed="right"
                                 label="操作"
@@ -199,12 +217,11 @@
                             <template slot-scope="scope">
                                 <el-button @click="handleClick(scope.row)" type="text" size="small">查看</el-button>
                                 <el-button @click="updateVote(scope.row)" type="text" size="small">编辑</el-button>
-
                             </template>
                         </el-table-column>
                     </el-table>
 
-                    <div class="block votePaging" style="margin-bottom: -110px">
+                    <div class="block votePaging" style="margin-bottom: 10px">
                         <el-pagination
                                 layout="prev, pager, next"
                                 :page-count="totalPage"
@@ -219,67 +236,28 @@
         <el-footer>BY @YQ</el-footer>
     </el-container>
 
-    <el-dialog title="参加的选手" :visible.sync="dialogFormVisiblePlayers">
-
-        <el-switch
-                style="display: block;margin-bottom: 10px"
-                v-model="realName"
-                active-color="#13ce66"
-                inactive-color="#ff4949"
-                active-text="实名投票"
-                inactive-text="匿名投票">
-        </el-switch>
-        <el-popconfirm
-                title="确定投票吗？"
-                @confirm="vote()"
-        >
-            <el-button type="primary" slot="reference" round>确定投票</el-button>
-
-        </el-popconfirm>
-        </el-switch>
-
-
-        <el-button type="success" @click="describeDialogFormVisible = true" round>成为选手</el-button>
-        <el-popconfirm
-                title="确定通过审核吗？"
-                @confirm="passCheck('1')"
-        >
-            <el-button type="warning" slot="reference" round>通过审核</el-button>
-
-        </el-popconfirm>
-        <el-popconfirm
-                title="确定取消通过审核吗？"
-                @confirm="passCheck('0')"
-        >
-            <el-button type="danger" slot="reference" round>取消通过审核</el-button>
-
-        </el-popconfirm>
-        <el-button type="primary" @click="addPlayerDialogFormVisible = true" round>添加选手</el-button>
+    <el-dialog title="创建的投票" :visible.sync="dialogFormVisiblePlayers" width="930px">
 
         <el-table
                 :data="players"
                 style="width: 100%"
-                @selection-change="handleSelectionChange"
+
                 tooltip-effect="dark">
+
             <el-table-column
-                    fixed
-                    type="selection"
-                    width="55">
-            </el-table-column>
-            <el-table-column
-                    label="参赛时间"
-                    prop="createTime"
+                    label="创建时间"
+                    prop="createDate"
                     width="170">
             </el-table-column>
             <el-table-column
-                    label="名称"
-                    prop="name"
-                    width="80">
+                    label="结束时间"
+                    prop="endDate"
+                    width="170">
             </el-table-column>
             <el-table-column
-                    label="得票"
-                    prop="gainVotes"
-                    width="50">
+                    label="最大投票数"
+                    prop="maxChoice"
+                    width="110">
             </el-table-column>
             <el-table-column
                     label="审核"
@@ -295,59 +273,35 @@
                     width="120">
             </el-table-column>
             <el-table-column
-                    label="得票百分比"
-                    width="150">
-                <template slot-scope="scope">
-                    <el-progress :percentage="scope.row.gainVotesPercentage" :color="customColors"></el-progress>
-
+                    prop="adoptDate"
+                    label="审核通过时间"
+                    width="170">
                 </template>
-
             </el-table-column>
             <el-table-column
-                    fixed="right"
-                    label="操作"
-                    width="150">
+                    label="是否结束"
+                    width="80">
                 <template slot-scope="scope">
-
-                    <el-popover
-                            placement="right"
-                            width="300"
-                            trigger="click">
-
-                        <el-table
-                                :data="voteInfo"
-                                style="width: 100%"
-                                height="200">
-                            <el-table-column
-                                    label="投票人"
-                                    width="100"
-                                    prop="user">
-                            </el-table-column>
-                            <el-table-column
-                                    label="被投票人"
-                                    width="100"
-                                    prop="player">
-                            </el-table-column>
-                            <el-table-column
-                                    label="投票项目"
-                                    width="100"
-                                    prop="vote">
-                            </el-table-column>
-
-                        </el-table>
-
-                        <el-button slot="reference" @click="lookVoteInfo(scope.row)" type="text" size="small">查看得票</el-button>
-
-                    </el-popover>
-                    <el-popconfirm
-                            title="确定删除该选手吗？"
-                            @confirm="deletePlayer(scope.row)"
-                    >
-                    <el-button type="text" slot="reference" size="small">删除</el-button>
-                    </el-popconfirm>
-
+                    <span v-if="scope.row.state=='0'">未结束</span>
+                    <span v-if="scope.row.state=='2' "style="color: greenyellow" >未开始</span>
+                    <span  v-if="scope.row.state=='1'" style="color: #F56C6C">结束</span>
                 </template>
             </el-table-column>
+            <!--<el-table-column-->
+            <!--align="right">-->
+            <!--<template slot="header" slot-scope="scope">-->
+            <!---->
+            <!--</template>-->
+            <!--<template slot-scope="scope">-->
+            <!--<el-button-->
+            <!--size="mini"-->
+            <!--@click="handleEdit(scope.$index, scope.row)">Edit</el-button>-->
+            <!--<el-button-->
+            <!--size="mini"-->
+            <!--type="danger"-->
+            <!--@click="handleDelete(scope.$index, scope.row)">Delete</el-button>-->
+            <!--</template>-->
+            <!--</el-table-column>-->
         </el-table>
         <div class="block" style="text-align: center">
             <el-pagination
@@ -361,7 +315,37 @@
 
 
     </el-dialog>
+    <el-dialog title="修改用户信息" :visible.sync="dialogFormVisibleUserInfo" width="400px">
+        <el-form :model="userInfo" status-icon :rules="rules" ref="userInfo" label-width="100px"
+                 class="demo-ruleForm">
+            <el-form-item prop="name" label="名称">
+                <el-input v-model="userInfo.name" autocomplete="off"></el-input>
+            </el-form-item>
+            <el-form-item prop="username" label="用户名">
+                <el-input v-model="userInfo.username" autocomplete="off"></el-input>
+            </el-form-item>
+            <el-form-item prop="password" label="密码">
+                <el-input v-model="userInfo.password" autocomplete="off"></el-input>
+            </el-form-item>
+            <el-form-item prop="email" label="邮箱"
+                          :rules="[
+                    { required: true, message: '请输入邮箱地址', trigger: 'blur' },
+                    { type: 'email', message: '请输入正确的邮箱地址', trigger: ['blur', 'change'] }
+                    ]">
+                <el-input v-model="userInfo.email" autocomplete="off"></el-input>
+            </el-form-item>
+            <el-form-item>
+                <el-popconfirm
+                        title="确定修改吗？"
+                        @confirm="modifyUserInfo('userInfo')"
+                >
+                    <el-button type="primary" slot="reference" style="margin-left: 190px;">提交</el-button>
 
+                </el-popconfirm>
+
+            </el-form-item>
+        </el-form>
+    </el-dialog>
     <el-dialog title="修改名称" :visible.sync="dialogFormVisibleName" width="400px">
         <el-form :model="ruleForm1" status-icon :rules="rules" ref="ruleForm1" label-width="100px"
                  class="demo-ruleForm">
@@ -470,6 +454,29 @@
       </span>
     </el-dialog>
 
+    <el-dialog title="添加选手" :width="dialogWidth" :visible.sync="addPlayerDialogFormVisible">
+        <el-form :model="addPlayerForm" :rules="rules" ref="addPlayerForm" label-width="80px">
+
+            <el-form-item label="名称" prop="name" :label-width="formLabelWidth">
+                <el-input v-model="addPlayerForm.name" autocomplete="off"></el-input>
+            </el-form-item>
+            <el-form-item label="描述" prop="describe" :label-width="formLabelWidth">
+                <el-input v-model="addPlayerForm.describe" autocomplete="off"></el-input>
+            </el-form-item>
+
+        </el-form>
+        <div slot="footer" class="dialog-footer">
+            <el-button @click="describeDialogFormVisible = false">取 消</el-button>
+            <el-popconfirm
+                    title="确定添加吗？"
+                    @confirm="addPlayer()"
+            >
+                <el-button type="primary" slot="reference">确 定</el-button>
+
+            </el-popconfirm>
+        </div>
+    </el-dialog>
+
     <el-dialog title="更新投票信息" :visible.sync="updateVoteFormVisible" width="30%">
         <el-form ref="updateVoteForm" :rules="rules" :model="updateVoteForm" label-width="80px">
             <el-form-item label="名称" prop="name">
@@ -508,28 +515,51 @@
       </span>
     </el-dialog>
 
-    <el-dialog title="添加选手" :width="dialogWidth" :visible.sync="addPlayerDialogFormVisible" >
-        <el-form :model="addPlayerForm" :rules="rules" ref="addPlayerForm" label-width="80px">
+    <el-dialog title="添加用户" :width="dialogWidth" :visible.sync="addUserDialogFormVisible">
+        <el-form :model="ruleForm2" status-icon :rules="rules" ref="ruleForm2" label-width="100px"
+                 class="demo-ruleForm login-box">
 
-            <el-form-item label="名称" prop="name" :label-width="formLabelWidth">
-                <el-input v-model="addPlayerForm.name" autocomplete="off"></el-input>
-            </el-form-item>
-            <el-form-item label="描述" prop="describe" :label-width="formLabelWidth">
-                <el-input v-model="addPlayerForm.describe" autocomplete="off"></el-input>
+            <el-form :model="dynamicValidateForm" ref="user" label-width="100px" class="demo-dynamic">
+                <el-form-item
+                        class="pass"
+                        prop="username"
+                        label="用户名"
+                        :rules="[
+                    { required: true, message: '请输入用户名', trigger: 'blur' },
+                    ]"
+                >
+                    <el-input v-model="dynamicValidateForm.username"></el-input>
+                </el-form-item>
+            </el-form>
+            <el-form-item label="密码" prop="password" class="pass">
+                <el-input type="password" v-model="ruleForm2.password" autocomplete="off"></el-input>
             </el-form-item>
 
+            <el-form :model="dynamicValidateForm" ref="dynamicValidateForm" label-width="100px"
+                     class="demo-dynamic">
+                <el-form-item
+                        class="pass"
+                        prop="email"
+                        label="邮箱"
+                        :rules="[
+                    { required: true, message: '请输入邮箱地址', trigger: 'blur' },
+                    { type: 'email', message: '请输入正确的邮箱地址', trigger: ['blur', 'change'] }
+                    ]"
+                >
+                    <el-input v-model="dynamicValidateForm.email"></el-input>
+                </el-form-item>
+            </el-form>
+            <el-form-item>
+                <el-button type="primary" @click="submitFormAddUser('ruleForm2','user')">添 加</el-button>
+                <el-button @click="resetFormAddUser('ruleForm2','dynamicValidateForm','user')" class="reset">重 置
+                </el-button>
+                <!--<el-button type="primary" @click="loginForm()">登 录</el-button>-->
+
+            </el-form-item>
         </el-form>
-        <div slot="footer" class="dialog-footer">
-            <el-button @click="describeDialogFormVisible = false">取 消</el-button>
-            <el-popconfirm
-                    title="确定添加吗？"
-                    @confirm="addPlayer()"
-            >
-                <el-button type="primary" slot="reference">确 定</el-button>
 
-            </el-popconfirm>
-        </div>
     </el-dialog>
+
 </div>
 
 
@@ -580,33 +610,27 @@
                     {color: '#1989fa', percentage: 80},
                     {color: '#6f7ad3', percentage: 100}
                 ],
+                searchVote: '',
+                options: [{
+                    value: '已审核',
+                    label: '已审核'
+                }, {
+                    value: '未审核',
+                    label: '未审核'
+                },],
+                value: '',
+                voteMultipleTable: [],
                 describeForm: {
                     describe: ""
                 },
-                addPlayerForm:{
-                  name:"",
-                  describe:""
+                addPlayerForm: {
+                    name: "",
+                    describe: ""
                 },
-                voteInfo:[{
-                    vote:"1",
-                    user:"1",
-                    player:"1"
-                },
-                    {
-                        vote:"2",
-                        user:"2",
-                        player:"2"
-                    },
-                    {
-                        vote:"3",
-                        user:"3",
-                        player:"3"
-                    },
-
-                ],
-                addPlayerDialogFormVisible:false,
-                voteInfoDialogTableVisible:false,
+                addUserDialogFormVisible:false,
+                dialogFormVisibleUserInfo: false,
                 updateVoteFormVisible: false,
+                addPlayerDialogFormVisible: false,
                 realName: true,
                 num: 1,
                 dialogWidth: '400px',
@@ -637,6 +661,13 @@
                     endDate: "",
                     maxChoice: 1
                 },
+                updateVoteForm: {
+                    id: "",
+                    name: "",
+                    describe: "",
+                    endDate: "",
+                    maxChoice: "",
+                },
                 players: [],
                 row: [],
                 labelPosition: 'left',
@@ -645,15 +676,25 @@
                     checkPass: '',
                     age: ''
                 },
+                userInfo: {
+                    id: '',
+                    name: '',
+                    username: '',
+                    password: '',
+                    email: ''
+                },
+                dynamicValidateForm: {
+                    username: '',
+                    email: ''
+                },
+                ruleForm2: {
+                    password: '',
+                    checkPass: '',
+                    age: '',
+                    value: ''
+                },
                 ruleForm1: {
                     name: "",
-                },
-                updateVoteForm: {
-                    id: "",
-                    name: "",
-                    describe: "",
-                    endDate: "",
-                    maxChoice: "",
                 },
                 rules: {
                     name: [
@@ -674,6 +715,14 @@
                     endDate: [
                         {required: true, message: '结束时间不可为空', trigger: 'blur'}
                     ],
+                    password: [
+                        {validator: validatePass, trigger: 'blur'},
+                        {required: true, message: '密码不可为空', trigger: 'blur'}
+                    ],
+
+                    username: [
+                        {required: true, message: '账号不可为空', trigger: 'blur'}
+                    ]
                 },
             };
         },
@@ -689,20 +738,29 @@
                     this.userType = r.data.data.userType;
                     // console.log(r.data)
                 });
-                let pageVo = {"limit": this.pageSize, "page": this.page};
-
+                let state = 0;
+                if (this.value == "已审核") {
+                    state = 1;
+                } else if (this.value == "未审核") {
+                    state = 0;
+                } else if (this.value == '') {
+                    state = -1;
+                }
+                let pageVo = {"limit": this.pageSize, "page": this.page, "state": state, "searchVote": this.searchVote};
+                // console.log(state);
+                // console.log(this.searchVote);
                 // console.log(pageVo);
-                this.$http.post('/vote/userVotePaging', pageVo).then((r) => {
+                this.$http.post('/user/userPaging', pageVo).then((r) => {
                     // console.log(r.data);
-                    this.votes = r.data.data.votes;
-                    for (let i = 0; i < this.votes.length; i++) {
-                        var maxChoice = this.votes[i].maxChoice;
-                        // this.votes[i].maxChoice = maxChoice + "人";
-                        console.log(this.votes[i].maxChoice);
+                    this.users = r.data.data.users;
+                    // for (let i = 0; i < this.votes.length; i++) {
+                    //     var maxChoice = this.votes[i].maxChoice;
+                    //     // this.votes[i].maxChoice = maxChoice + "人";
+                    //     // console.log(this.votes[i].maxChoice);
+                    //
+                    // }
 
-                    }
-
-                    console.log(this.votes);
+                    // console.log(this.votes);
                     this.page = r.data.data.page;
                     this.totalPage = r.data.data.totalPage;
                     // console.log(r.data)
@@ -721,10 +779,10 @@
                 this.$http.post('/player/playerPaging', pageVo).then((r) => {
                     this.players = r.data.data.players;
 
-                    console.log(this.players);
+                    // console.log(this.players);
                     this.playerPage = val;
                     this.playerTotalPage = r.data.data.totalPage;
-                    console.log(r.data.data.totalPage);
+                    // console.log(r.data.data.totalPage);
 
                 });
             },
@@ -798,18 +856,20 @@
                 this.$refs[formName].resetFields();
             },
             handleClick(row) {
-                let pageVo = {"limit": this.playerPageSize, "page": this.playerPage, "vote": {"id": row.id}};
-                this.$http.post('/player/playerPaging', pageVo).then((r) => {
-                    this.players = r.data.data.players;
-                    this.voteId = row.id;
-                    this.row = row;
-                    console.log(this.players);
+                // console.log(row);
+                let pageVo = {"limit": this.playerPageSize, "page": this.playerPage, "user": {"id": row.id}};
+                this.$http.post('/user/votePaging', pageVo).then((r) => {
+                    this.players = r.data.data.votes;
+                    // this.voteId = row.id;
+                    // this.row = row;
+                    // console.log(this.players);
                     this.playerPage = r.data.data.page;
                     this.playerTotalPage = r.data.data.totalPage;
-                    console.log(r.data.data);
+                    // console.log(r.data.data);
                 });
                 // console.log(pageVo);
                 this.dialogFormVisiblePlayers = true;
+
                 // console.log(row);
             },
             handleSelectionChange(val) {
@@ -819,43 +879,8 @@
 
                 // console.log(this.row.maxChoice.replace('人',''));
             },
-            passCheck(a) {
-                // console.log(this.realName);
-                let vote = this.row;
-                for (let i = 0; i < this.multipleSelection.length; i++) {
-                    this.multipleSelection[i].state = a;
-                }
-
-                let players = this.multipleSelection;
-
-                let flag = true;
-
-                if (players == "") {
-                    const h = this.$createElement;
-                    this.$notify({
-                        title: '提示',
-                        message: h('i', {style: 'color: teal'}, '请选择至少一位参赛选手！')
-                    });
-                } else {
-
-                        let voteVo = {"players": players, "vote": vote};
-                        this.$http.put('/vote/playerPassCheck', voteVo).then((r) => {
-                            const h = this.$createElement;
-                            this.$notify({
-                                title: '提示',
-                                message: h('i', {style: 'color: teal'}, r.data.message)
-                            });
-                            this.timer = setTimeout(() => {   //设置延迟执行
-                                location.reload();
-                            }, 1000);
-                        });
-
-                    // console.log(vote);
-                    // console.log(players);
-                }
-            },
             vote() {
-                // console.log(this.realName);
+                console.log(this.realName);
                 let vote = this.row;
                 let players = this.multipleSelection;
                 let flag = true;
@@ -909,8 +934,8 @@
                         location.reload();
                     }, 1000);
                 });
-                // console.log(this.describeForm.describe);
-                // console.log(vote);
+                console.log(this.describeForm.describe);
+                console.log(vote);
             },
             createVote(formName) {
                 this.$refs[formName].validate((valid) => {
@@ -952,15 +977,84 @@
 
                 });
             },
+            goManagement() {
+                location.href = "/rest/votingManagement";
+            },
+            goAdmin() {
+                this.$http.post('/user/goAdmin', this.userType).then((r) => {
+                    location.href = "/rest/admin";
+                }).catch((r) => {
+                    this.$message({
+                        showClose: true,
+                        message: '您不是管理员',
+                        type: 'error'
+                    });
+                    this.timer = setTimeout(() => {   //设置延迟执行
+                        location.reload();
+                    }, 1000);
+
+                });
+            },
+            addPlayer() {
+                // let vote = this.row;
+                // let player = this.addPlayerForm;
+                let playerVo = {"vote": this.row, "player": this.addPlayerForm};
+                // console.log(this.addPlayerForm);
+                // let voteVo = {"vote": vote, "describe": this.describeForm.describe};
+                this.$http.post('/player/addPlayer', playerVo).then((r) => {
+                    const h = this.$createElement;
+                    this.$notify({
+                        title: '提示',
+                        message: h('i', {style: 'color: teal'}, r.data.message)
+                    });
+                    this.timer = setTimeout(() => {   //设置延迟执行
+                        location.reload();
+                    }, 1000);
+                });
+            },
+            passCheck(a) {
+                // console.log(this.realName);
+                let vote = this.row;
+                for (let i = 0; i < this.multipleSelection.length; i++) {
+                    this.multipleSelection[i].state = a;
+                }
+
+                let players = this.multipleSelection;
+
+                if (players == "") {
+                    const h = this.$createElement;
+                    this.$notify({
+                        title: '提示',
+                        message: h('i', {style: 'color: teal'}, '请选择至少一位参赛选手！')
+                    });
+                } else {
+
+                    let voteVo = {"players": players, "vote": vote};
+                    this.$http.put('/vote/playerPassCheck', voteVo).then((r) => {
+                        const h = this.$createElement;
+                        this.$notify({
+                            title: '提示',
+                            message: h('i', {style: 'color: teal'}, r.data.message)
+                        });
+                        this.timer = setTimeout(() => {   //设置延迟执行
+                            location.reload();
+                        }, 1000);
+                    });
+
+
+                    // console.log(vote);
+                    // console.log(players);
+                }
+            },
             updateVote(row) {
                 // console.log(row);
-                this.updateVoteForm.id = row.id;
-                this.updateVoteForm.name = row.name;
-                this.updateVoteForm.describe = row.describe;
-                this.updateVoteForm.endDate = row.endDate;
-                this.updateVoteForm.maxChoice = row.maxChoice;
-                // console.log(this.updateVoteForm);
-                this.updateVoteFormVisible = true;
+                this.userInfo.id = row.id;
+                this.userInfo.name = row.name;
+                this.userInfo.username = row.username;
+                this.userInfo.password = row.password;
+                this.userInfo.email = row.email;
+                // console.log(this.userInfo);
+                this.dialogFormVisibleUserInfo = true;
             },
             updateVoteFormV(formName) {
                 let vote = this.updateVoteForm;
@@ -986,36 +1080,84 @@
                     }
                 });
             },
-            lookVoteInfo(row){
-                // console.log(row);
-                let player = row;
-                // console.log(player);
-                this.voteInfoDialogTableVisible = true;
-                this.$http.post('/vote/lookVoteInfo', player).then((r) => {
-                    this.voteInfo = r.data.data;
-                    // console.log(r.data.data);
-                });
-
+            voteHandleSelectionChange(val) {
+                this.voteMultipleTable = val;
+                // console.log(val);
             },
-            deletePlayer(row){
-                let player = row;
-                console.log(player);
-                this.$http.post('/player/deletePlayer', player).then((r) => {
-                    this.$message({
-                        showClose: true,
-                        message: "删除成功!",
-                        type: 'success'
+            searchVotes() {
+                this.load();
+            },
+            clearSearchVotes() {
+                this.value = '';
+                this.searchVote = '';
+                this.load();
+            },
+            passCheckVote(a) {
+                // console.log(this.realName);
+                // let vote = this.row;
+                for (let i = 0; i < this.voteMultipleTable.length; i++) {
+                    this.voteMultipleTable[i].state = a;
+                }
+
+                let votes = this.voteMultipleTable;
+                console.log(votes);
+                if (votes == "") {
+                    const h = this.$createElement;
+                    this.$notify({
+                        title: '提示',
+                        message: h('i', {style: 'color: teal'}, '请选择至少一个投票项目！')
                     });
-                    this.timer = setTimeout(() => {
-                        //设置延迟执行
-                        location.reload();
-                    }, 1000);
+                } else {
 
-                });
+                    let voteVo = {"votes": votes};
+                    this.$http.put('/vote/votePassCheck', voteVo).then((r) => {
+                        const h = this.$createElement;
+                        this.$notify({
+                            title: '提示',
+                            message: h('i', {style: 'color: teal'}, r.data.message)
+                        });
+                        this.timer = setTimeout(() => {   //设置延迟执行
+                            location.reload();
+                        }, 1000);
+                    });
+
+
+                    // console.log(vote);
+                    // console.log(players);
+                }
             },
-            goAdmin(){
-                this.$http.post('/user/goAdmin', this.userType).then((r) => {
-                    location.href = "/rest/admin";
+            deleteVote() {
+
+                let votes = this.voteMultipleTable;
+                console.log(votes);
+                if (votes == "") {
+                    const h = this.$createElement;
+                    this.$notify({
+                        title: '提示',
+                        message: h('i', {style: 'color: teal'}, '请选择至少一名用户！')
+                    });
+                } else {
+
+                    let userVo = {"users": votes};
+                    this.$http.post('/user/deleteUsers', userVo).then((r) => {
+                        const h = this.$createElement;
+                        this.$notify({
+                            title: '提示',
+                            message: h('i', {style: 'color: teal'}, r.data.message)
+                        });
+                        this.timer = setTimeout(() => {   //设置延迟执行
+                            location.reload();
+                        }, 1000);
+                    });
+
+
+                    // console.log(vote);
+                    // console.log(players);
+                }
+            },
+            goAdminUserControl() {
+                this.$http.post('/user/goAdminUserControl', this.userType).then((r) => {
+                    location.href = "/rest/adminUserControl";
                 }).catch((r) => {
                     this.$message({
                         showClose: true,
@@ -1028,23 +1170,91 @@
 
                 });
             },
-            addPlayer(){
-                // let vote = this.row;
-                // let player = this.addPlayerForm;
-                let playerVo = {"vote":this.row,"player":this.addPlayerForm};
-                // console.log(this.addPlayerForm);
-                // let voteVo = {"vote": vote, "describe": this.describeForm.describe};
-                this.$http.post('/player/addPlayer', playerVo).then((r) => {
-                    const h = this.$createElement;
-                    this.$notify({
-                        title: '提示',
-                        message: h('i', {style: 'color: teal'}, r.data.message)
-                    });
-                    this.timer = setTimeout(() => {   //设置延迟执行
-                        location.reload();
-                    }, 1000);
+            modifyUserInfo(userInfo) {
+                console.log(userInfo);
+                let user = this.userInfo;
+
+                this.$refs[userInfo].validate((valid) => {
+                    if (valid) {
+                        this.$http.put('/user/modifyUserInfo', user).then((r) => {
+                            this.$message({
+                                showClose: true,
+                                message: "修改成功!",
+                                type: 'success'
+                            });
+                            this.timer = setTimeout(() => {
+                                //设置延迟执行
+                                location.reload();
+                            }, 1000);
+
+                        });
+
+                    } else {
+                        console.log('修改失败!!');
+                        return false;
+                    }
                 });
-            }
+            },
+            submitFormAddUser(formName, dynamicValidateForm, user) {
+                console.log(this.dynamicValidateForm.username);
+                console.log(this.ruleForm2.password);
+                console.log(this.ruleForm2.checkPass);
+                console.log(this.dynamicValidateForm.email);
+                let registerUser = {
+                    "username": this.dynamicValidateForm.username,
+                    "password": this.ruleForm2.password,
+                    "email": this.dynamicValidateForm.email
+                };
+                this.$refs[formName].validate((valid) => {
+                    if (valid) {
+                        // alert('submit!');
+                        this.$http.post('/user/registerIn', registerUser)
+                            .then((r) => {
+                                console.log(r.data);
+                                if (r.data.isok == true) {
+                                    this.$message({
+                                        showClose: true,
+                                        message: '添加成功！',
+                                        type: 'success'
+                                    });
+                                    this.timer = setTimeout(() => {   //设置延迟执行
+                                        location.reload();
+                                    }, 2000);
+                                } else {
+                                    this.$message({
+                                        showClose: true,
+                                        message: r.data.message,
+                                        type: 'error'
+                                    });
+                                    this.timer = setTimeout(() => {   //设置延迟执行
+                                        //location.href = "/rest/";
+                                        this.resetForm(formName);
+                                    }, 2000);
+                                }
+                            }).catch((r) => {
+                            this.$message({
+                                showClose: true,
+                                message: r.data.message,
+                                type: 'error'
+                            });
+                            this.timer = setTimeout(() => {   //设置延迟执行
+                                location.reload();
+                                this.resetForm(formName);
+                            }, 2000);
+
+                        })
+
+                    } else {
+                        // console.log('error submit!!');
+                        return false;
+                    }
+                });
+            },
+            resetFormAddUser(formName, dynamicValidateForm, user) {
+                this.$refs[formName].resetFields();
+                this.$refs.dynamicValidateForm.resetFields();
+                this.$refs.user.resetFields();
+            },
         }
     })
 </script>

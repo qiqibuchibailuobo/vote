@@ -19,6 +19,7 @@ public class PageVo {
     List<User> users;
     List<Vote> votes;
     List<Player> players;
+    User user;
     Vote vote;
     @JsonProperty(value = "limit")
     int limit;
@@ -28,4 +29,5 @@ public class PageVo {
     int totalPage;
     int state;
     String searchVote;
+    String createUser;
 }

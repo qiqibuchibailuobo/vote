@@ -54,6 +54,7 @@ public class LoginConfig implements WebMvcConfigurer {
         registry.addViewController("/rest/register").setViewName("register");
         registry.addViewController("/rest/votingManagement").setViewName("votingManagement");
         registry.addViewController("/rest/admin").setViewName("admin");
+        registry.addViewController("/rest/adminUserControl").setViewName("adminUserControl");
 
 
     }

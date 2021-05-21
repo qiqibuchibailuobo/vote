@@ -20,12 +20,27 @@ public class PlayerServiceImpl implements PlayerService{
     private PlayerMapper playerMapper;
     @Resource
     private VoteInfoMapper voteInfoMapper;
-
+    @Resource
+    private UserMapper userMapper;
+    @Resource
+    private VoteMapper voteMapper;
     @Override
     public PageVo playerPaging(PageVo pageVo) {
         PlayerExample playerExample1 = new PlayerExample();
         playerExample1.createCriteria().andVoteIdEqualTo(pageVo.getVote().getId());
         List<Player> player1 = playerMapper.selectByExample(playerExample1);
+
+        Vote vote = voteMapper.selectByPrimaryKey(pageVo.getVote().getId());
+        if(vote.getUserId() == null){
+            pageVo.setCreateUser("用户已注销！");
+        }
+        UserExample userExample = new UserExample();
+        userExample.createCriteria().andIdEqualTo(vote.getUserId());
+        List<User> users = userMapper.selectByExample(userExample);
+        if (users.size() > 0) {
+            User user = users.get(0);
+            pageVo.setCreateUser(user.getName());
+        }
         int i = player1.size();
         int num = 0;
         for (Player player : player1) {
@@ -48,6 +63,7 @@ public class PlayerServiceImpl implements PlayerService{
                 playerMapper.updateByPrimaryKeySelective(player2);
             }
         }
+
         pageVo.setPlayers(players);
         pageVo.setTotal(i);
         pageVo.setPage(pageVo.getPage());

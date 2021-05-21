@@ -129,7 +129,7 @@
     <el-container>
         <el-header>
             <span class="headerFont headerIcon" @click="returnIndex()">投票系统</span> &nbsp;&nbsp;
-            <span class="headerFont">用户管理</span> &nbsp;&nbsp;
+            <span class="headerFont" @click="goAdminUserControl()">用户管理</span> &nbsp;&nbsp;
             <span class="headerFont" @click="createVoteFormVisible = true">创建投票</span> &nbsp;&nbsp;
             <span class="headerFont" @click="goManagement()">我创建的投票</span> &nbsp;&nbsp;
             <span class="headerFont">欢迎管理员</span> &nbsp;&nbsp;
@@ -270,10 +270,11 @@
                 </el-card>
             </el-col>
         </el-main>
-        <el-footer>Footer</el-footer>
+        <el-footer>BY @YQ</el-footer>
     </el-container>
 
     <el-dialog title="参加的选手" :visible.sync="dialogFormVisiblePlayers">
+        创建人：{{createUser}}
         <el-switch
                 style="display: block;margin-bottom: 10px"
                 v-model="realName"
@@ -310,6 +311,8 @@
         <el-button type="primary" @click="addPlayerDialogFormVisible = true" round>添加选手</el-button>
 
         <el-table
+
+                empty-text="暂无"
                 :data="players"
                 style="width: 100%"
                 @selection-change="handleSelectionChange"
@@ -666,6 +669,7 @@
                     checkPass: '',
                     age: ''
                 },
+                createUser:'',
                 ruleForm1: {
                     name: "",
                 },
@@ -821,16 +825,23 @@
                 this.$refs[formName].resetFields();
             },
             handleClick(row) {
-
+                        console.log(row);
                         let pageVo = {"limit": this.playerPageSize, "page": this.playerPage, "vote": {"id": row.id}};
                         this.$http.post('/player/playerPaging', pageVo).then((r) => {
-                            this.players = r.data.data.players;
+                            if(r.data.data.players == null){
+                                this.players = [{name:"暂无"}];
+                                console.log(this.players);
+                            }else {
+                                this.players = r.data.data.players;
+                            }
+                            // console.log(this.players+"111");
                             this.voteId = row.id;
                             this.row = row;
-                            console.log(this.players);
+                            // console.log(this.players);
                             this.playerPage = r.data.data.page;
                             this.playerTotalPage = r.data.data.totalPage;
-                            console.log(r.data.data);
+                            this.createUser = r.data.data.createUser;
+                            // console.log(this.createUser+"111");
                         });
                         // console.log(pageVo);
                         this.dialogFormVisiblePlayers = true;
@@ -1120,6 +1131,21 @@
                     // console.log(players);
                 }
             },
+            goAdminUserControl(){
+                this.$http.post('/user/goAdminUserControl', this.userType).then((r) => {
+                    location.href = "/rest/adminUserControl";
+                }).catch((r) => {
+                    this.$message({
+                        showClose: true,
+                        message: '您不是管理员',
+                        type: 'error'
+                    });
+                    this.timer = setTimeout(() => {   //设置延迟执行
+                        location.reload();
+                    }, 1000);
+
+                });
+            }
         }
     })
 </script>

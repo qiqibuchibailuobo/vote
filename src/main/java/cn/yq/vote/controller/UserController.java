@@ -5,6 +5,7 @@ import cn.yq.vote.generator.User;
 import cn.yq.vote.generator.UserExample;
 import cn.yq.vote.generator.UserMapper;
 import cn.yq.vote.model.PageVo;
+import cn.yq.vote.model.UserVo;
 import cn.yq.vote.service.UserService;
 import org.springframework.web.bind.annotation.*;
 
@@ -56,11 +57,35 @@ public class UserController {
         return userService.userPaging(pageVo);
     }
     @PostMapping("/goAdmin")
-    public AjaxResponse register(@RequestBody int userType) {
+    public AjaxResponse goAdmin(@RequestBody int userType) {
         if (userType == 1) {
             return AjaxResponse.error();
         }else {
             return AjaxResponse.success();
         }
+    }
+    @PostMapping("/goAdminUserControl")
+    public AjaxResponse goAdminUserControl(@RequestBody int userType) {
+        if (userType == 1) {
+            return AjaxResponse.error();
+        }else {
+            return AjaxResponse.success();
+        }
+    }
+    @PostMapping("/deleteUsers")
+    public AjaxResponse deleteUsers(@RequestBody UserVo userVo,
+                                    HttpServletRequest request){
+        User user=(User)request.getSession().getAttribute("user");
+        return userService.deleteUsers(userVo,user);
+    }
+    @PutMapping("/modifyUserInfo")
+    public AjaxResponse modifyUserInfo(@RequestBody User user, HttpServletRequest request, HttpSession session){
+        User user1=(User)request.getSession().getAttribute("user");
+
+        return  userService.modifyUserInfo(user,user1,session);
+    }
+    @PostMapping("/votePaging")
+    public PageVo votePaging(@RequestBody PageVo pageVo){
+        return userService.votePaging(pageVo);
     }
 }
