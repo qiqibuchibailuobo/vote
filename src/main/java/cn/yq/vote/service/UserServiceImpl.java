@@ -6,6 +6,7 @@ import cn.yq.vote.exception.CustomExceptionType;
 import cn.yq.vote.generator.*;
 import cn.yq.vote.model.PageVo;
 import cn.yq.vote.model.UserVo;
+import cn.yq.vote.util.Md5Util;
 import org.springframework.http.HttpRequest;
 import org.springframework.stereotype.Service;
 
@@ -38,7 +39,8 @@ public class UserServiceImpl implements UserService{
                     System.out.println(u.getUsername());
                     return AjaxResponse.error(user);
                 }else {
-                    if (u.getPassword().equals(user.getPassword())){
+                    Md5Util md5Util = new Md5Util();
+                    if (u.getPassword().equals(md5Util.md5( user.getPassword()))){
                         return AjaxResponse.success(u);
                     }else {
                         return AjaxResponse.error(user);
@@ -73,6 +75,7 @@ public class UserServiceImpl implements UserService{
             }else {
                 user.setName(user.getUsername());
                 user.setUserType(1);
+                user.setPassword(new Md5Util().md5(user.getPassword()));
                 userMapper.insert(user);
                 return AjaxResponse.success(user, "注册成功！");
             }
@@ -91,6 +94,7 @@ public class UserServiceImpl implements UserService{
 
     @Override
     public void modifyPassword(User user) {
+        user.setPassword(new Md5Util().md5(user.getPassword()));
         userMapper.updateByPrimaryKeySelective(user);
     }
 

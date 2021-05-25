@@ -324,8 +324,8 @@
             <el-form-item prop="username" label="用户名">
                 <el-input v-model="userInfo.username" autocomplete="off"></el-input>
             </el-form-item>
-            <el-form-item prop="password" label="密码">
-                <el-input v-model="userInfo.password" autocomplete="off"></el-input>
+            <el-form-item prop="password"  label="密码">
+                <el-input v-model="userInfo.password" show-password autocomplete="off"></el-input>
             </el-form-item>
             <el-form-item prop="email" label="邮箱"
                           :rules="[
@@ -1051,7 +1051,7 @@
                 this.userInfo.id = row.id;
                 this.userInfo.name = row.name;
                 this.userInfo.username = row.username;
-                this.userInfo.password = row.password;
+                this.userInfo.password = "";
                 this.userInfo.email = row.email;
                 // console.log(this.userInfo);
                 this.dialogFormVisibleUserInfo = true;
