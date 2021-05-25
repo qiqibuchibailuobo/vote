@@ -32,7 +32,7 @@ public class LoginConfig implements WebMvcConfigurer {
                                             "/login/loginIn",//登录
                                             "/user/registerIn",//注册
                                             "/rest/register",//注册页面
-//                                            "/user/userPaging",//用户分页
+                                            "/vote/votePaging",//投票分页
                                          "/**/*.html",            //html静态资源
                                          "/**/*.js",              //js静态资源
                                          "/**/*.css",             //css静态资源
