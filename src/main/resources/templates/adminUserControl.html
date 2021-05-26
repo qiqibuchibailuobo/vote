@@ -282,9 +282,9 @@
                     label="是否结束"
                     width="80">
                 <template slot-scope="scope">
-                    <span v-if="scope.row.state=='0'">未结束</span>
-                    <span v-if="scope.row.state=='2' "style="color: greenyellow" >未开始</span>
-                    <span  v-if="scope.row.state=='1'" style="color: #F56C6C">结束</span>
+                    <span v-if="scope.row.endState=='0'">未结束</span>
+                    <span v-if="scope.row.endState=='2' "style="color: greenyellow" >未开始</span>
+                    <span  v-if="scope.row.endState=='1'" style="color: #F56C6C">结束</span>
                 </template>
             </el-table-column>
             <!--<el-table-column-->
@@ -676,6 +676,7 @@
                     checkPass: '',
                     age: ''
                 },
+                userId:'',
                 userInfo: {
                     id: '',
                     name: '',
@@ -765,6 +766,7 @@
                     this.totalPage = r.data.data.totalPage;
                     // console.log(r.data)
                 });
+
             },
             handleCurrentChange(val) {
                 // console.log(val);
@@ -775,15 +777,18 @@
                 this.playerPage = val;
                 //this.load();
                 console.log(val);
-                let pageVo = {"limit": this.playerPageSize, "page": this.playerPage, "vote": {"id": this.voteId}};
-                this.$http.post('/player/playerPaging', pageVo).then((r) => {
-                    this.players = r.data.data.players;
-
+                let pageVo = {"limit": this.playerPageSize, "page": this.playerPage, "user": {"id": this.userId}};
+                // let pageVo = {"limit": this.playerPageSize, "page": this.playerPage, "user": {"id": this.userId}};
+                console.log(pageVo);
+                this.$http.post('/user/votePaging', pageVo).then((r) => {
+                    this.players = r.data.data.votes;
+                    // this.voteId = row.id;
+                    // this.row = row;
                     // console.log(this.players);
-                    this.playerPage = val;
+                    console.log(this.players);
+                    this.playerPage = r.data.data.page;
                     this.playerTotalPage = r.data.data.totalPage;
-                    // console.log(r.data.data.totalPage);
-
+                    // console.log(r.data.data);
                 });
             },
 
@@ -858,11 +863,13 @@
             handleClick(row) {
                 // console.log(row);
                 let pageVo = {"limit": this.playerPageSize, "page": this.playerPage, "user": {"id": row.id}};
+                this.userId = row.id;
                 this.$http.post('/user/votePaging', pageVo).then((r) => {
                     this.players = r.data.data.votes;
                     // this.voteId = row.id;
                     // this.row = row;
                     // console.log(this.players);
+                    console.log(this.players);
                     this.playerPage = r.data.data.page;
                     this.playerTotalPage = r.data.data.totalPage;
                     // console.log(r.data.data);
